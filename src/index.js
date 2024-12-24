@@ -7,6 +7,7 @@ import VolunteerCard from './scenes/VolunteerCard';
 import VolunteerTrialScene from './scenes/VolunteerTrialScene';
 import ScientistCard from './scenes/ScientistCard';
 import ScientistTrialScene from './scenes/ScientistTrialScene';
+import PuzzleScene from './scenes/PuzzleScene';
 
 const config = {
     type: Phaser.AUTO,
@@ -22,7 +23,8 @@ const config = {
         VolunteerCard,
         VolunteerTrialScene,
         ScientistCard,
-        ScientistTrialScene
+        ScientistTrialScene,
+        PuzzleScene
     ],
     physics: {
         default: 'arcade',

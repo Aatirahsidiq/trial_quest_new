@@ -6,205 +6,203 @@ export default class ScientistTrialScene extends Phaser.Scene {
     }
 
     init() {
-        this.trials = this.registry.get('trials');
+        if (!this.registry.get('trials')) {
+            this.registry.set('trials', []);
+        }
+        this.scale.setGameSize(1200, 1000);
     }
 
     create() {
         // Background
         const bg = this.add.graphics();
         bg.fillGradientStyle(0x1a2a3f, 0x1a2a3f, 0x0f1c2d, 0x0f1c2d, 1);
-        bg.fillRect(0, 0, 1200, 800);
+        bg.fillRect(0, 0, 1200, 1000);
+
+        // Create scrollable container for content
+        const mainContainer = this.add.container(0, 0);
 
         // Header
-        this.add.text(600, 50, 'Research Scientist Dashboard', {
+        this.createHeader();
+
+        // Trials List with more space
+        this.createTrialsList();
+
+        // Back button (keep on top)
+        this.createBackButton();
+    }
+
+    createHeader() {
+        // Main title - moved up
+        this.add.text(600, 30, 'Scientist Dashboard', {
             fontSize: '36px',
             fill: '#fff',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        // Analytics Summary
-        this.createAnalyticsSummary();
-
-        // Trial List with Analysis Tools
-        this.createTrialAnalytics();
-
-        // Create back button
-        this.createBackButton();
-    }
-
-    createAnalyticsSummary() {
-        const totalParticipants = this.trials.reduce((sum, trial) => sum + trial.volunteers, 0);
-        const activeTrials = this.trials.filter(t => t.status === 'Recruiting').length;
-        const completedTrials = this.trials.filter(t => t.status === 'Completed').length;
-
-        // Summary cards
-        this.createSummaryCard(300, 120, '🧬', 'Active Trials', activeTrials, '#2ecc71');
-        this.createSummaryCard(600, 120, '👥', 'Total Participants', totalParticipants, '#3498db');
-        this.createSummaryCard(900, 120, '📊', 'Completed Trials', completedTrials, '#e67e22');
-    }
-
-    createSummaryCard(x, y, icon, title, value, color) {
-        const cardBg = this.add.rectangle(x, y, 250, 80, 0x2c3e50);
-        
-        this.add.text(x - 100, y - 20, icon, {
-            fontSize: '30px'
+        // Subtitle - adjusted spacing
+        this.add.text(600, 70, 'Trial Data Analysis', {
+            fontSize: '24px',
+            fill: '#3498db',
+            fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        this.add.text(x + 20, y - 20, title, {
-            fontSize: '18px',
-            fill: '#fff',
-            fontFamily: 'Arial'
-        }).setOrigin(0, 0.5);
+        // Get trials data
+        const trials = this.registry.get('trials') || [];
+        
+        // Calculate statistics
+        const activeTrials = trials.filter(t => t.status !== 'Completed').length;
+        const totalVolunteers = trials.reduce((sum, trial) => sum + (trial.volunteers || 0), 0);
+        const avgCompliance = trials.reduce((sum, trial) => sum + (trial.compliance || 0), 0) / trials.length || 0;
 
-        this.add.text(x + 20, y + 20, value.toString(), {
-            fontSize: '24px',
-            fill: color,
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
-        }).setOrigin(0, 0.5);
+        // Stats boxes - moved down
+        const stats = [
+            { icon: '🔬', label: 'Active Trials', value: activeTrials, x: 300 },
+            { icon: '👥', label: 'Total Volunteers', value: totalVolunteers, x: 600 },
+            { icon: '📊', label: 'Avg. Compliance', value: `${Math.round(avgCompliance)}%`, x: 900 }
+        ];
+
+        // Stats container with background
+        const statsBg = this.add.rectangle(600, 160, 900, 80, 0x2c3e50);
+
+        stats.forEach(stat => {
+            // Stat box background
+            this.add.rectangle(stat.x, 160, 220, 60, 0x34495e)
+                .setInteractive()
+                .on('pointerover', function() { this.setFillStyle(0x2c3e50); })
+                .on('pointerout', function() { this.setFillStyle(0x34495e); });
+
+            // Icon
+            this.add.text(stat.x - 90, 160, stat.icon, {
+                fontSize: '28px'
+            }).setOrigin(0.5);
+
+            // Value
+            this.add.text(stat.x, 150, stat.value.toString(), {
+                fontSize: '28px',
+                fill: '#fff',
+                fontFamily: 'Arial',
+                fontWeight: 'bold'
+            }).setOrigin(0.5);
+
+            // Label
+            this.add.text(stat.x, 175, stat.label, {
+                fontSize: '16px',
+                fill: '#95a5a6',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+        });
     }
 
-    createTrialAnalytics() {
-        this.trials.forEach((trial, index) => {
-            const y = 250 + (index * 150);
+    createTrialsList() {
+        const trials = this.registry.get('trials') || [];
+        const startY = 300; // Increased starting position to avoid overlap
+        const spacing = 200;
 
-            // Trial card background
-            const cardBg = this.add.rectangle(600, y, 900, 120, 0x2c3e50)
+        if (trials.length === 0) {
+            this.add.text(600, 400, 'No active trials to analyze', {
+                fontSize: '24px',
+                fill: '#95a5a6',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+            return;
+        }
+
+        // Create scrolling container for trials
+        const scrollableArea = this.add.container(0, 0);
+
+        trials.forEach((trial, index) => {
+            const y = startY + (index * spacing);
+
+            // Card shadow and background (taller cards)
+            this.add.rectangle(605, y + 5, 900, 160, 0x000000, 0.3);
+            const cardBg = this.add.rectangle(600, y, 900, 160, 0x2c3e50)
                 .setInteractive()
-                .on('pointerover', () => cardBg.setFillStyle(0x3c546c))
-                .on('pointerout', () => cardBg.setFillStyle(0x2c3e50))
-                .on('pointerdown', () => this.showDetailedAnalysis(trial));
+                .on('pointerover', () => cardBg.setFillStyle(0x34495e))
+                .on('pointerout', () => cardBg.setFillStyle(0x2c3e50));
 
-            // Trial identifier
-            const icon = this.add.text(200, y - 30, '👨‍🔬', {
-                fontSize: '40px'
+            // Left Column (Trial Info)
+            this.add.text(180, y - 50, trial.icon || '🔬', { 
+                fontSize: '40px' 
+            }).setOrigin(0.5);
+
+            this.add.text(300, y - 50, trial.name, {
+                fontSize: '24px',
+                fill: '#fff',
+                fontFamily: 'Arial',
+                fontWeight: 'bold'
+            });
+
+            // Status
+            const status = trial.status || 'Recruiting';
+            const statusColor = this.getStatusColor(status);
+            this.add.circle(800, y - 50, 6, statusColor);
+            this.add.text(820, y - 50, status, {
+                fontSize: '18px',
+                fill: statusColor,
+                fontFamily: 'Arial'
             }).setOrigin(0, 0.5);
 
-            const name = this.add.text(260, y - 30, trial.name, {
-                fontSize: '24px',
+            // Middle Column (Metrics) - More vertical spacing
+            this.add.text(300, y + 0, `📊 Compliance: ${trial.compliance || 85}%`, {
+                fontSize: '18px',
+                fill: '#95a5a6',
+                fontFamily: 'Arial'
+            });
+
+            this.add.text(500, y + 0, `🔍 Quality: ${trial.dataQuality || 80}%`, {
+                fontSize: '18px',
+                fill: '#95a5a6',
+                fontFamily: 'Arial'
+            });
+
+            // Right Column (Progress) - Better positioned
+            this.add.text(700, y + 40, 'Participants:', {
+                fontSize: '18px',
                 fill: '#fff',
                 fontFamily: 'Arial'
             });
 
             // Progress bar
-            this.createProgressBar(trial, y);
+            const barWidth = 200;
+            const barHeight = 12;
+            this.add.rectangle(900, y + 40, barWidth, barHeight, 0x34495e);
+            
+            const progress = (trial.volunteers || 0) / (trial.maxVolunteers || 1);
+            const fillWidth = Math.min(barWidth * progress, barWidth);
+            
+            this.add.rectangle(800 + (fillWidth/2), y + 40, fillWidth, barHeight, 
+                this.getProgressColor(progress * 100)).setOrigin(0.5);
 
-            // Analysis buttons
-            this.createAnalysisButtons(trial, y);
-
-            // Compliance indicator
-            const compliance = this.calculateCompliance(trial);
-            const complianceText = this.add.text(800, y - 30, 
-                `Protocol Compliance: ${compliance}%`, {
+            this.add.text(1000, y + 40, 
+                `${trial.volunteers || 0}/${trial.maxVolunteers || 0}`, {
                 fontSize: '18px',
-                fill: this.getComplianceColor(compliance),
+                fill: '#fff',
                 fontFamily: 'Arial'
-            });
-
-            // Data quality score
-            const dataQuality = this.calculateDataQuality(trial);
-            const qualityText = this.add.text(800, y + 20, 
-                `Data Quality: ${dataQuality}%`, {
-                fontSize: '18px',
-                fill: this.getQualityColor(dataQuality),
-                fontFamily: 'Arial'
-            });
+            }).setOrigin(0, 0.5);
         });
     }
 
-    createProgressBar(trial, y) {
-        // Background bar
-        this.add.rectangle(500, y, 200, 15, 0x34495e);
-
-        // Progress fill
-        const progress = trial.volunteers / trial.maxVolunteers;
-        const fillWidth = 200 * progress;
-        this.add.rectangle(400 + (fillWidth/2), y, fillWidth, 15, this.getProgressColor(progress))
-            .setOrigin(0.5);
-
-        // Percentage text
-        this.add.text(520, y, `${Math.round(progress * 100)}%`, {
-            fontSize: '14px',
-            fill: '#fff',
-            fontFamily: 'Arial'
-        }).setOrigin(0, 0.5);
-    }
-
-    createAnalysisButtons(trial, y) {
-        // View Data button
-        const dataButton = this.add.rectangle(1000, y - 20, 120, 30, 0x3498db)
-            .setInteractive()
-            .on('pointerover', () => dataButton.setFillStyle(0x2980b9))
-            .on('pointerout', () => dataButton.setFillStyle(0x3498db))
-            .on('pointerdown', () => this.viewData(trial));
-
-        this.add.text(1000, y - 20, 'View Data', {
-            fontSize: '16px',
-            fill: '#fff',
-            fontFamily: 'Arial'
-        }).setOrigin(0.5);
-
-        // Export Report button
-        const reportButton = this.add.rectangle(1000, y + 20, 120, 30, 0x2ecc71)
-            .setInteractive()
-            .on('pointerover', () => reportButton.setFillStyle(0x27ae60))
-            .on('pointerout', () => reportButton.setFillStyle(0x2ecc71))
-            .on('pointerdown', () => this.exportReport(trial));
-
-        this.add.text(1000, y + 20, 'Export Report', {
-            fontSize: '16px',
-            fill: '#fff',
-            fontFamily: 'Arial'
-        }).setOrigin(0.5);
-    }
-
-    calculateCompliance(trial) {
-        // Simulated compliance calculation
-        return Math.min(100, Math.round((trial.volunteers / trial.maxVolunteers) * 100 + Math.random() * 20));
-    }
-
-    calculateDataQuality(trial) {
-        // Simulated data quality calculation
-        return Math.min(100, Math.round(85 + Math.random() * 15));
+    getStatusColor(status) {
+        const colors = {
+            'Recruiting': 0x2ecc71,
+            'Full': 0xe74c3c,
+            'On Hold': 0xf1c40f,
+            'Completed': 0x3498db
+        };
+        return colors[status] || 0xffffff;
     }
 
     getProgressColor(progress) {
-        if (progress < 0.3) return 0xe74c3c;
-        if (progress < 0.7) return 0xf1c40f;
+        if (progress < 30) return 0xe74c3c;
+        if (progress < 70) return 0xf1c40f;
         return 0x2ecc71;
-    }
-
-    getComplianceColor(compliance) {
-        if (compliance < 70) return '#e74c3c';
-        if (compliance < 90) return '#f1c40f';
-        return '#2ecc71';
-    }
-
-    getQualityColor(quality) {
-        if (quality < 75) return '#e74c3c';
-        if (quality < 90) return '#f1c40f';
-        return '#2ecc71';
-    }
-
-    showDetailedAnalysis(trial) {
-        console.log('Show detailed analysis for:', trial.name);
-    }
-
-    viewData(trial) {
-        console.log('View data for:', trial.name);
-    }
-
-    exportReport(trial) {
-        console.log('Export report for:', trial.name);
     }
 
     createBackButton() {
         const button = this.add.rectangle(100, 50, 150, 50, 0x3498db)
             .setInteractive()
-            .on('pointerdown', () => {
-                this.scene.start('MainMenuScene');
-            });
+            .on('pointerdown', () => this.scene.start('ScientistCard'));
 
         this.add.text(100, 50, '← Back', {
             fontSize: '24px',

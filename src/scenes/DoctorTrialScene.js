@@ -86,7 +86,7 @@ export default class DoctorTrialScene extends Phaser.Scene {
 
     createTrialsList() {
         this.trials.forEach((trial, index) => {
-            const y = 150 + (index * 150);
+            const y = 180 + (index * 150);
 
             // Trial card background
             const cardBg = this.add.rectangle(600, y, 900, 120, 0x2c3e50)
@@ -148,18 +148,6 @@ export default class DoctorTrialScene extends Phaser.Scene {
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        // Add Note button
-        const noteButton = this.add.rectangle(1000, y + 20, 120, 30, 0xf1c40f)
-            .setInteractive()
-            .on('pointerover', () => noteButton.setFillStyle(0xf39c12))
-            .on('pointerout', () => noteButton.setFillStyle(0xf1c40f))
-            .on('pointerdown', () => this.addNote(trial));
-
-        this.add.text(1000, y + 20, 'Add Note', {
-            fontSize: '16px',
-            fill: '#fff',
-            fontFamily: 'Arial'
-        }).setOrigin(0.5);
     }
 
     getStatusColor(status) {
