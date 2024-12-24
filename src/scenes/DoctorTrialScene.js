@@ -188,7 +188,7 @@ export default class DoctorTrialScene extends Phaser.Scene {
         // Create input fields
         const inputValues = {};
         fields.forEach(field => {
-            this.add.text(300, field.y, field.label, {
+            this.add.text(200, field.y, field.label, {
                 fontSize: '20px',
                 fill: '#fff',
                 fontFamily: 'Arial'

@@ -15,7 +15,7 @@ export default class ScientistCard extends Phaser.Scene {
         const cardContainer = this.add.container(600, 400);
 
         // Card Background
-        const cardBg = this.add.rectangle(0, 0, 800, 500, 0x2c3e50);
+        const cardBg = this.add.rectangle(0, 0, 1000, 500, 0x2c3e50);
         cardContainer.add(cardBg);
 
         // Scientist Icon
@@ -83,7 +83,7 @@ export default class ScientistCard extends Phaser.Scene {
 
         skills.forEach((skill, index) => {
             // Skill name
-            const skillName = this.add.text(100, -120 + (index * 60), skill.name, {
+            const skillName = this.add.text(20, -120 + (index * 60), skill.name, {
                 fontSize: '18px',
                 fill: '#fff',
                 fontFamily: 'Arial'
